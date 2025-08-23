@@ -1,245 +1,335 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>GPS 업로드</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-  margin: 0;
-  padding: 10px;
-  font-family: sans-serif;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: #f0f0f0;
-  text-align: center;
-  user-select: none;
-}
-#status-text { 
-  font-size: 24px; 
-  font-weight: bold; 
-  margin-bottom: 10px; 
-}
-.btn-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: 2px;
-}
-.btn-label {
-  font-size: 18px;
-  width: 50px;
-  text-align: right;
-  font-weight: bold;
-}
-button {
-  width: 80px;
-  height: 80px;
-  font-size: 36px;
-  border: none;
-  border-radius: 12px;
-  background: #000033;
-  color: #fff;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.1s;
-}
-button.active {
-  background: #000088;
-}
-</style>
+<title>실시간 카카오맵</title>
+<script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=472f378af49957df6636a87b97fb6fd6&libraries=services"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
-  authDomain: "mygps-11798.firebaseapp.com",
-  databaseURL: "https://mygps-11798-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "mygps-11798",
-  storageBucket: "mygps-11798.firebasedestorage.app",
-  messagingSenderId: "271371741627",
-  appId: "1:271371741627:web:642901f43c5ad57d80bc9e"
+    apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
+    authDomain: "mygps-11798.firebaseapp.com",
+    databaseURL: "https://mygps-11798-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "mygps-11798",
+    storageBucket: "mygps-11798.firebasestorage.app",
+    messagingSenderId: "271371741627",
+    appId: "1:271371741627:web:642901f43c5ad57d80bc9e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-window.mapLevel = 4;
-window.borderRadius = 0; 
-window.mapOpacity = 1;
-window.mapSize = 200;      
-const MAX_RADIUS = 160;
-const MIN_MOVE = 0.00005;
-const MAX_SIZE = 600;
-const MIN_SIZE = 100;
+let map, marker, addressDiv, distanceDiv;
+let destinationMarker, routeLine;
+let lastPosition = null;
+let routeDrawn = false; // 경로가 이미 그려졌는지 상태
 
-let prevPos = null;
+function createMarker(pos) {
+    if (marker) marker.setMap(null);
 
-function distance(lat1, lng1, lat2, lng2) {
-  return Math.sqrt((lat2 - lat1)**2 + (lng2 - lng1)**2);
+    const containerDiv = document.createElement('div');
+    containerDiv.style.position = 'absolute';
+    containerDiv.style.width = '30px';
+    containerDiv.style.height = '40px';
+    containerDiv.style.bottom = '5px';
+    containerDiv.style.transform = 'translateX(-50%)';
+
+    const diamondDiv = document.createElement('div');
+    diamondDiv.style.width = '30px';
+    diamondDiv.style.height = '40px';
+    diamondDiv.style.backgroundColor = 'red';
+    diamondDiv.style.clipPath = 'polygon(40% 30%, 60% 30%, 85% 45%, 50% 100%, 15% 45%)';
+
+    containerDiv.appendChild(diamondDiv);
+
+    marker = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: containerDiv,
+        yAnchor: 1
+    });
+
+    marker.setMap(map);
 }
 
-function uploadLocation(lat, lng) {
-  set(ref(db, "location/current"), {
-    lat, lng,
-    level: window.mapLevel,
-    borderRadius: window.borderRadius,
-    opacity: window.mapOpacity,
-    mapSize: window.mapSize,
-    timestamp: Date.now()
-  });
+function createDestinationMarker(pos) {
+    if (destinationMarker) destinationMarker.setMap(null);
+
+    const containerDiv = document.createElement('div');
+    containerDiv.style.position = 'absolute';
+    containerDiv.style.width = '30px';
+    containerDiv.style.height = '40px';
+    containerDiv.style.bottom = '5px';
+    containerDiv.style.transform = 'translateX(-50%)';
+
+    const diamondDiv = document.createElement('div');
+    diamondDiv.style.width = '30px';
+    diamondDiv.style.height = '40px';
+    diamondDiv.style.backgroundColor = 'blue';
+    diamondDiv.style.clipPath = 'polygon(40% 30%, 60% 30%, 85% 45%, 50% 100%, 15% 45%)';
+
+    containerDiv.appendChild(diamondDiv);
+
+    destinationMarker = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: containerDiv,
+        yAnchor: 1
+    });
+
+    destinationMarker.setMap(map);
+}
+
+function createAddressDiv(container) {
+    if (!addressDiv) {
+        addressDiv = document.createElement('div');
+        addressDiv.style.position = 'absolute';
+        addressDiv.style.top = '0px';
+        addressDiv.style.left = '50%';
+        addressDiv.style.transform = 'translateX(-50%)';
+        addressDiv.style.fontSize = '20px';
+        addressDiv.style.fontWeight = '900';
+        addressDiv.style.fontFamily = 'sans-serif';
+        addressDiv.style.color = '#000';
+        addressDiv.style.zIndex = '9999';
+        addressDiv.style.whiteSpace = 'nowrap';
+        container.appendChild(addressDiv);
+    }
+}
+
+function createDistanceDiv(container) {
+    if (!distanceDiv) {
+        distanceDiv = document.createElement('div');
+        distanceDiv.style.position = 'absolute';
+        distanceDiv.style.bottom = '0px';
+        distanceDiv.style.left = '50%';
+        distanceDiv.style.transform = 'translateX(-50%)';
+        distanceDiv.style.fontSize = '16px';
+        distanceDiv.style.fontWeight = 'bold';
+        distanceDiv.style.fontFamily = 'sans-serif';
+        distanceDiv.style.color = '#0066ff';
+        distanceDiv.style.backgroundColor = 'rgba(255,255,255,0.8)';
+        distanceDiv.style.padding = '1px 2px';
+        distanceDiv.style.borderRadius = '0px';
+        distanceDiv.style.zIndex = '9999';
+        distanceDiv.style.display = 'block';
+        container.appendChild(distanceDiv);
+    }
+}
+
+const geocoder = new kakao.maps.services.Geocoder();
+let currentAddress = {city:'', district:'', neighborhood:''};
+function updateAddress(latlng) {
+    geocoder.coord2Address(latlng.getLng(), latlng.getLat(), (result, status) => {
+        if (status === kakao.maps.services.Status.OK) {
+            const region = result[0].address;
+            currentAddress.city = region.region_1depth_name || '';
+            currentAddress.district = region.region_2depth_name || '';
+            currentAddress.neighborhood = region.region_3depth_name || '';
+            refreshAddressText();
+        } else {
+            if (addressDiv) addressDiv.innerText = '주소를 가져올 수 없음';
+        }
+    });
+}
+
+function refreshAddressText() {
+    if (!addressDiv) return;
+    const container = document.getElementById("map");
+    const mapSize = container.offsetWidth;
+    let text;
+    if (mapSize > 430) text = `${currentAddress.city} ${currentAddress.district} ${currentAddress.neighborhood}`;
+    else if (mapSize > 330) text = `${currentAddress.district} ${currentAddress.neighborhood}`;
+    else text = `${currentAddress.neighborhood}`;
+    addressDiv.innerText = text;
+}
+
+function updateDistanceText(data) {
+    if (!distanceDiv || !data.routes || data.routes.length === 0) return;
+    distanceDiv.style.display = 'block';
+
+    const dist = data.routes[0].summary.distance;
+    const distanceText = dist >= 1000 ? (dist/1000).toFixed(2) : dist;
+    const unit = dist >= 1000 ? 'km' : 'm';
+
+    distanceDiv.innerHTML = `${distanceText} <span id="distanceUnit">${unit}</span>`;
+}
+
+function updateDistanceUnitOnResize() {
+    if (!distanceDiv) return;
+    const container = document.getElementById("map");
+    const mapSize = container.offsetWidth;
+    const unitSpan = document.getElementById('distanceUnit');
+    if (!unitSpan) return;
+
+    if (mapSize < 200) unitSpan.style.display = 'none';
+    else unitSpan.style.display = 'inline';
+}
+
+async function fetchRoute(start, end) {
+    const REST_KEY = "bac1f5ced0d30c96b782458d968713fe";
+    const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${start.getLng()},${start.getLat()}&destination=${end.getLng()},${end.getLat()}&priority=RECOMMEND`;
+    const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `KakaoAK ${REST_KEY}` }
+    });
+    const data = await response.json();
+    return data;
+}
+
+async function drawRealRoute(start, end) {
+    if (!start || !end) return;
+    if (routeLine) routeLine.setMap(null);
+    try {
+        const data = await fetchRoute(start, end);
+        if (!data.routes || data.routes.length === 0) return;
+
+        updateDistanceText(data);
+
+        const path = [];
+        const sections = data.routes[0].sections;
+        sections.forEach(sec => {
+            sec.roads.forEach(road => {
+                for (let i = 0; i < road.vertexes.length; i += 2) {
+                    const lng = road.vertexes[i];
+                    const lat = road.vertexes[i + 1];
+                    path.push(new kakao.maps.LatLng(lat, lng));
+                }
+            });
+        });
+
+        routeLine = new kakao.maps.Polyline({
+            map: map,
+            path: path,
+            strokeWeight: 5,
+            strokeColor: '#0066ff',
+            strokeOpacity: 0.8,
+            strokeStyle: 'solid'
+        });
+    } catch (e) {
+        console.error("경로 가져오기 실패:", e);
+    }
+}
+
+function getDistance(pos1, pos2) {
+    return kakao.maps.LatLng.prototype.distance.call(pos1, pos2);
 }
 
 window.onload = function() {
-  const zoomInBtn = document.getElementById('zoom-in');
-  const zoomOutBtn = document.getElementById('zoom-out');
-  const rounderInBtn = document.getElementById('rounder-in');
-  const rounderOutBtn = document.getElementById('rounder-out');
-  const opacityUpBtn = document.getElementById('opacityUp');
-  const opacityDownBtn = document.getElementById('opacityDown');
-  const sizeUpBtn = document.getElementById('size-up');
-  const sizeDownBtn = document.getElementById('size-down');
+    const container = document.getElementById('map');
+    createAddressDiv(container);
+    createDistanceDiv(container);
 
-  const opacityLabel = document.getElementById('opacity-label');
-  const radiusLabel = document.getElementById('radius-label');
-  const levelLabel = document.getElementById('level-label');
-  const sizeLabel = document.getElementById('size-label');
-
-  function updateDisplays() {
-    opacityLabel.textContent = window.mapOpacity.toFixed(2);
-    radiusLabel.textContent = window.borderRadius;
-    levelLabel.textContent = window.mapLevel;
-    sizeLabel.textContent = window.mapSize;
-  }
-  updateDisplays();
-
-  const intervalDelay = 150;
-  const startDelay = 500;
-  const zoomIncrement = 1;
-  const radiusIncrement = 10;
-  const opacityIncrement = 0.05;
-  const sizeIncrement = 20;
-
-  function changeOpacity(delta) {
-    window.mapOpacity = Math.min(1, Math.max(0.1, window.mapOpacity + delta));
-    updateDisplays();
-  }
-  function changeRadius(delta) {
-    window.borderRadius = Math.min(MAX_RADIUS, Math.max(0, window.borderRadius + delta));
-    updateDisplays();
-  }
-  function changeZoom(delta) {
-    window.mapLevel = Math.min(14, Math.max(1, window.mapLevel + delta));
-    updateDisplays();
-  }
-  function changeMapSize(delta) {
-    window.mapSize = Math.min(MAX_SIZE, Math.max(MIN_SIZE, window.mapSize + delta));
-    updateDisplays();
-  }
-
-  function addHoldEvent(button, delta, func) {
-    let interval = null;
-    let timeout = null;
-    let longPress = false;
-    const startChange = () => {
-      longPress = true;
-      interval = setInterval(() => func(delta), intervalDelay);
-    };
-    button.addEventListener('mousedown', () => {
-      longPress = false;
-      timeout = setTimeout(startChange, startDelay);
+    map = new kakao.maps.Map(container, {
+        center: new kakao.maps.LatLng(37.5665, 126.9780),
+        level: 4
     });
-    button.addEventListener('mouseup', () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      if (!longPress) func(delta);
-    });
-    button.addEventListener('mouseleave', () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-    });
-    button.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      longPress = false;
-      timeout = setTimeout(startChange, startDelay);
-    });
-    button.addEventListener('touchend', () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
-      if (!longPress) func(delta);
-    });
-  }
 
-  addHoldEvent(opacityUpBtn, opacityIncrement, changeOpacity);
-  addHoldEvent(opacityDownBtn, -opacityIncrement, changeOpacity);
-  addHoldEvent(rounderInBtn, radiusIncrement, changeRadius);
-  addHoldEvent(rounderOutBtn, -radiusIncrement, changeRadius);
-  addHoldEvent(zoomInBtn, zoomIncrement, changeZoom);
-  addHoldEvent(zoomOutBtn, -zoomIncrement, changeZoom);
-  addHoldEvent(sizeUpBtn, sizeIncrement, changeMapSize);
-  addHoldEvent(sizeDownBtn, -sizeIncrement, changeMapSize);
+    const locRef = ref(db, "location/current");
+    const destRef = ref(db, "location/destination");
 
-  const buttons = document.querySelectorAll('button');
-  buttons.forEach(btn => {
-    btn.addEventListener('mousedown', () => btn.classList.add('active'));
-    btn.addEventListener('mouseup', () => btn.classList.remove('active'));
-    btn.addEventListener('mouseleave', () => btn.classList.remove('active'));
-    btn.addEventListener('touchstart', () => btn.classList.add('active'));
-    btn.addEventListener('touchend', () => btn.classList.remove('active'));
-    btn.addEventListener('touchcancel', () => btn.classList.remove('active'));
-  });
+    // 내 위치 실시간 갱신
+    onValue(locRef, (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+        const pos = new kakao.maps.LatLng(data.lat, data.lng);
 
-  if(navigator.geolocation){
-    navigator.geolocation.watchPosition(
-      (pos) => {
-        if(prevPos){
-          const moveDist = distance(prevPos.lat, prevPos.lng, pos.coords.latitude, pos.coords.longitude);
-          if(moveDist >= MIN_MOVE){
-            prevPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          }
-        } else {
-          prevPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        if (!marker) createMarker(pos);
+        else marker.setPosition(pos);
+        map.setCenter(pos);
+
+        if (data.level !== undefined) map.setLevel(data.level);
+        if (data.borderRadius !== undefined) container.style.borderRadius = data.borderRadius + 'px';
+        if (data.opacity !== undefined) container.style.opacity = data.opacity;
+        if (data.mapSize !== undefined) {
+            container.style.width = data.mapSize + 'px';
+            container.style.height = data.mapSize + 'px';
+            map.relayout();
+            map.setCenter(pos);
+            refreshAddressText();
+            updateDistanceUnitOnResize();
         }
-        uploadLocation(pos.coords.latitude, pos.coords.longitude);
-      },
-      (err) => console.error(err),
-      { enableHighAccuracy: true }
-    );
-  } else { alert("GPS를 지원하지 않는 기기입니다."); }
+
+        updateAddress(pos);
+
+        if (destinationMarker && !routeDrawn) {
+            drawRealRoute(pos, destinationMarker.getPosition());
+            routeDrawn = true;
+        }
+    });
+
+    // 클릭/더블클릭 처리
+    let clickTimeout = null;
+
+    kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
+        if (clickTimeout) return;
+        clickTimeout = setTimeout(() => {
+            clickTimeout = null;
+            const clickPos = mouseEvent.latLng;
+
+            if (destinationMarker) {
+                set(destRef, null);
+                if (distanceDiv) distanceDiv.style.display = 'none';
+            } else {
+                set(destRef, { lat: clickPos.getLat(), lng: clickPos.getLng() });
+            }
+        }, 250);
+    });
+
+    kakao.maps.event.addListener(map, 'dblclick', function(mouseEvent) {
+        if (clickTimeout) {
+            clearTimeout(clickTimeout);
+            clickTimeout = null;
+        }
+    });
+
+    // 목적지 실시간 갱신
+    onValue(destRef, (snapshot) => {
+        const dest = snapshot.val();
+
+        if (!dest) {
+            if (destinationMarker) {
+                destinationMarker.setMap(null);
+                destinationMarker = null;
+            }
+            if (routeLine) {
+                routeLine.setMap(null);
+                routeLine = null;
+            }
+            if (distanceDiv) distanceDiv.style.display = 'none';
+            routeDrawn = false;
+            return;
+        }
+
+        const destPos = new kakao.maps.LatLng(dest.lat, dest.lng);
+        if (!destinationMarker) createDestinationMarker(destPos);
+        else destinationMarker.setPosition(destPos);
+
+        if (!routeDrawn && marker) {
+            drawRealRoute(marker.getPosition(), destPos);
+            routeDrawn = true;
+        }
+    });
+
+    // resize 이벤트
+    window.addEventListener('resize', () => {
+        refreshAddressText();
+        updateDistanceUnitOnResize();
+    });
 };
 </script>
+<style>
+body {
+    margin:0; padding:0; min-height:100vh; position: relative;
+}
+#map {
+    width:200px; height:200px; border:1px solid #000; border-radius:0px;
+    transition: border-radius 0.2s ease, opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
+    position: absolute; top: 0; right: 0;
+}
+</style>
 </head>
 <body>
-  <div id="status-text">GPS 업로드 중...</div>
-
-  <div class="btn-row">
-    <div class="btn-label" id="opacity-label">1.00</div>
-    <button id="opacityUp">◆</button>
-    <button id="opacityDown">◇</button>
-  </div>
-
-  <div class="btn-row">
-    <div class="btn-label" id="radius-label">0</div>
-    <button id="rounder-out">□</button>
-    <button id="rounder-in">○</button>
-  </div>
-
-  <div class="btn-row">
-    <div class="btn-label" id="size-label">200</div>
-    <button id="size-up">+</button>
-    <button id="size-down">-</button>
-  </div>
-
-  <div class="btn-row">
-    <div class="btn-label" id="level-label">4</div>
-    <button id="zoom-out"><></button>  
-    <button id="zoom-in">><</button>   
-  </div>
+<div id="map"></div>
 </body>
 </html>
-
-
