@@ -10,21 +10,27 @@ body {
   background: #111;
   color: white;
 }
+
+/* 입력창 */
 input, button {
   font-size: 16px;
   padding: 10px;
 }
 input#letterInput {
-  width: 60%;
-  max-width: 300px;
+  width: 25ch; /* 25글자 폭 */
+  max-width: 100%;
   margin-bottom: 10px;
+  box-sizing: border-box;
 }
+
+/* 버튼 스타일 */
 button {
   cursor: pointer;
   margin: 2px;
   border-radius: 4px;
 }
 
+/* 글자 목록 */
 ul {
   list-style: none;
   padding: 0;
@@ -44,12 +50,17 @@ li span {
   word-break: break-word;
   margin-right: 5px;
 }
+
+/* 수정 input */
 li input.edit-input {
-  flex: 1 1 auto;
+  width: 25ch; /* 25글자 폭 */
+  max-width: 100%;
   margin-right: 5px;
   display: none;
+  box-sizing: border-box;
 }
 
+/* 버튼 색상 */
 .edit-btn {
   background: #0a84ff;
   color: white;
@@ -61,6 +72,7 @@ li input.edit-input {
   border: none;
 }
 
+/* 모바일 최적화 */
 @media (max-width: 480px) {
   input#letterInput {
     width: 100%;
@@ -85,7 +97,7 @@ li input.edit-input {
 
 <h2>Letters 관리</h2>
 
-<input type="text" id="letterInput" placeholder="글자 입력" maxlength="25"/>
+<input type="text" id="letterInput" placeholder="글자 입력"/>
 <button id="addBtn">등록</button>
 
 <ul id="lettersList"></ul>
@@ -161,7 +173,6 @@ async function loadLetters() {
     input.type = "text";
     input.className = "edit-input";
     input.value = docSnap.data().text;
-    input.maxLength = 25;
 
     const editBtn = document.createElement("button");
     editBtn.textContent = "수정";
@@ -176,7 +187,6 @@ async function loadLetters() {
     input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
-    // 글자 뒤에 버튼 배치
     li.appendChild(span);
     li.appendChild(input);
     li.appendChild(editBtn);
