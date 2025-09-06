@@ -6,26 +6,30 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  padding: 0;      /* ← 기존 20px 제거 */
-  margin: 0;       /* 브라우저 기본 마진 제거 */
+  padding: 0;
+  margin: 0;
   background: #111;
   color: white;
 }
+
+/* 제목 */
 #lettersTitle {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin: 10px;
 }
+
 /* 입력창 */
 input, button {
   font-size: 16px;
   padding: 10px;
+  box-sizing: border-box;
 }
 input#letterInput {
-  width: 360px; /* 45글자 폭 */
-  max-width: 100%;
-  margin-bottom: 10px;
-  box-sizing: border-box;
+  width: 100%;      /* 화면 폭 최대 */
+  max-width: 360px; /* 최대 폭 제한 */
+  margin: 10px auto;
+  display: block;
 }
 
 /* 버튼 스타일 */
@@ -39,38 +43,41 @@ button {
 ul {
   list-style: none;
   padding: 0;
-  margin: 0;       /* 좌우 마진 제거 */
-  max-width: 360px; /* 45글자 폭에 맞춘 px */
+  margin: 0 auto;
+  width: 100%;
+  max-width: 360px;
+  box-sizing: border-box;
 }
+
 li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start; /* 왼쪽 정렬 */
+  justify-content: flex-start;
   margin-bottom: 10px;
   background: #222;
   padding: 5px;
   border-radius: 5px;
-   border: 2px solid #0a84ff; /* ← 테두리 추가 */
+  border: 2px solid #0a84ff;
 }
+
 li span {
   flex: 1 1 auto;
   word-break: break-word;
   margin-right: 5px;
-  width: 45ch;
-  max-width: 100%;
   display: inline-block;
-  white-space: pre-wrap; /* ★ 띄어쓰기/줄바꿈 유지 */
+  width: 100%;
+  white-space: pre-wrap;
 }
 
 /* 수정 input */
 li input.edit-input {
-  width: 45ch; /* 45글자 폭 */
+  width: 100%;
   max-width: 100%;
   margin-right: 5px;
   display: none;
   box-sizing: border-box;
-  border: 2px solid #0a84ff; /* ← 수정 input 테두리 */
+  border: 2px solid #0a84ff;
 }
 
 /* 버튼 색상 */
@@ -86,18 +93,14 @@ li input.edit-input {
 }
 
 @media (max-width: 480px) {
-  input#letterInput {
-    width: 360px; 
-    margin-bottom: 10px;
-  }
- li {
+  li {
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start; /* ← 왼쪽 정렬 유지 */
+    justify-content: flex-start;
   }
   li span, li input.edit-input {
-    width: 100%;    /* 화면 폭 최대 */
-    max-width: 360px; /* 최대 폭 제한 */
+    width: 100%;
+    max-width: 100%;
   }
   li button {
     flex: 0 0 auto;
@@ -105,7 +108,6 @@ li input.edit-input {
     margin-top: 2px;
   }
 }
-
 </style>
 </head>
 <body>
@@ -117,17 +119,6 @@ li input.edit-input {
 
 <ul id="lettersList"></ul>
 
-<pre>
-"쩡햄Live",
-"자율적후원",
-"자율적후원ㅡㅡㅡㅡ ★ 큰 힘 감사합니다 ٩(ˊᗜˋ*)وㅡ",
-"1ㅡㅡㅡ 2ㅡㅡㅡ 3ㅡㅡㅡ★ 큰 힘 감사합니다 ٩(ˊᗜˋ*)و",
-"6ㅡㅡㅡ 7ㅡㅡㅡ 8ㅡㅡㅡ 9ㅡㅡㅡ 10ㅡㅡㅡ 11ㅡㅡㅡ ★ 큰 힘 감사합니다 ٩(ˊᗜˋ*)و",
-"구독좋아요",
-"감사합니다",
-"다시자유민주 다시윤석열 다시자유건국 YOONAGAIN"
-</pre>
-  
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -166,20 +157,18 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
   const isEditing = inputEl.style.display === "block";
 
   if (!isEditing) {
-    // 수정 모드
     spanEl.style.display = "none";
     inputEl.style.display = "block";
     inputEl.focus();
     inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
-    // 저장 모드
     const newText = inputEl.value;
     if (!newText) return;
     await updateDoc(doc(db, "letters", id), { text: newText });
     spanEl.textContent = newText;
     inputEl.style.display = "none";
-    spanEl.style.display = "inline-block"; // 항상 폭 유지
+    spanEl.style.display = "inline-block";
     btnEl.textContent = "수정";
   }
 }
@@ -208,7 +197,6 @@ async function loadLetters() {
     delBtn.textContent = "삭제";
     delBtn.className = "delete-btn";
 
-    // 이벤트 연결
     editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
     input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
@@ -227,7 +215,3 @@ loadLetters();
 
 </body>
 </html>
-
-
-
-
