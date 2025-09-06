@@ -1,26 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Letters 관리</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
+    input { padding: 5px; margin-right: 5px; }
+    button { padding: 5px 10px; margin-right: 5px; cursor: pointer; }
+    ul { list-style: none; padding: 0; margin-top: 20px; }
+    li { margin-bottom: 5px; display: flex; align-items: center; }
+    li span { flex: 1; }
+    li button { margin-left: 5px; border: none; border-radius: 3px; }
+    .delete-btn { background: red; color: white; }
+    .edit-btn { background: #0a84ff; color: white; }
+  </style>
+</head>
+<body>
+
+<h2>Letters 관리</h2>
+
 <input type="text" id="letterInput" placeholder="글자 입력" />
 <button id="addBtn">등록</button>
 
+<ul id="lettersList"></ul>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+  // 🔹 Firebase 설정
   const firebaseConfig = {
     apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
     authDomain: "mygps-11798.firebaseapp.com",
-    databaseURL: "https://mygps-11798-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "mygps-11798",
     storageBucket: "mygps-11798.firebasestorage.app",
     messagingSenderId: "271371741627",
     appId: "1:271371741627:web:642901f43c5ad57d80bc9e"
   };
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const lettersCol = collection(db, "letters");
+  const lettersList = document.getElementById("lettersList");
 
-  const btn = document.getElementById("addBtn");
-  btn.addEventListener("click", async () => {
-    const text = document.getElementById("letterInput").value;
-    await addDoc(collection(db, "letters"), { text });
-    alert("등록 완료!");
+  // 🔹 글자 등록
+  document.getElementById("addBtn").addEventListener("click", async () => {
+    const text = document.getElementById("letterInput").value.trim();
+    if (!text) return alert("글자를 입력하세요.");
+
+    await addDoc(lettersCol, { text });
+    document.getElementById("letterInput").value = "";
+    loadLetters();
   });
+
+  // 🔹 글자 삭제
+  async function deleteLetter(id) {
+    await deleteDoc(doc(db, "letters", id));
+    loadLetters();
+  }
+
+  // 🔹 글자 수정
+  async function editLetter(id, oldText) {
+    const newText = prompt("새 글자를 입력하세요:", oldText);
+    if (newText && newText.trim() !== "") {
+      await updateDoc(doc(db, "letters", id), { text: newText.trim() });
+      loadLetters();
+    }
+  }
+
+  // 🔹 글자 목록 불러오기
+  async function loadLetters() {
+    lettersList.innerHTML = "";
+    const snapshot = await getDocs(lettersCol);
+    snapshot.forEach(docSnap => {
+      const li = document.createElement("li");
+      const span = document.createElement("span");
+      span.textContent = docSnap.data().text;
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "수정";
+      editBtn.className = "edit-btn";
+      editBtn.addEventListener("click", () => editLetter(docSnap.id, docSnap.data().text));
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "삭제";
+      delBtn.className = "delete-btn";
+      delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
+
+      li.appendChild(span);
+      li.appendChild(editBtn);
+      li.appendChild(delBtn);
+      lettersList.appendChild(li);
+    });
+  }
+
+  // 초기 로드
+  loadLetters();
 </script>
+
+</body>
+</html>
