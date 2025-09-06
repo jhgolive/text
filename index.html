@@ -137,11 +137,14 @@ document.getElementById("addBtn").addEventListener("click", async () => {
   loadLetters();
 });
 
-// 글자 삭제
-async function deleteLetter(id) {
-  await deleteDoc(doc(db, "letters", id));
+// 글자 등록
+document.getElementById("addBtn").addEventListener("click", async () => {
+  const rawText = document.getElementById("letterInput").value;
+  if (!rawText.trim()) return alert("글자를 입력하세요."); // 입력 확인용
+  await addDoc(lettersCol, { text: rawText, timestamp: Date.now() }); // 공백 포함 그대로 저장
+  document.getElementById("letterInput").value = "";
   loadLetters();
-}
+});
 
 // 글자 수정/저장 토글
 async function toggleEdit(id, spanEl, inputEl, btnEl) {
@@ -156,9 +159,9 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     btnEl.textContent = "저장";
   } else {
     // 저장 모드
-    const newText = inputEl.value.trim();
-    if (!newText) return;
-    await updateDoc(doc(db, "letters", id), { text: newText });
+    const newText = inputEl.value;
+    if (!newText.trim()) return; // 입력 확인
+    await updateDoc(doc(db, "letters", id), { text: newText }); // 공백 포함 그대로 저장
     spanEl.textContent = newText;
     inputEl.style.display = "none";
     spanEl.style.display = "inline-block"; // 항상 폭 유지
@@ -209,5 +212,6 @@ loadLetters();
 
 </body>
 </html>
+
 
 
