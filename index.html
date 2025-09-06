@@ -90,9 +90,8 @@ li input.edit-input {
     align-items: center;
   }
   li span, li input.edit-input {
-    flex: 1 1 auto;  /* 70% 대신 auto */
-    width: 45ch;     /* 모바일에서도 45글자 폭 고정 */
-    max-width: 100%;
+    width: 100%;    /* 화면 폭 최대 */
+    max-width: 45ch; /* 최대 45글자 폭 */
   }
   li button {
     flex: 0 0 auto;
@@ -211,6 +210,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
