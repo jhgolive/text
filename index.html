@@ -10,32 +10,41 @@ body {
   margin: 0;
   background: #111;
   color: white;
+  box-sizing: border-box;
 }
 
-/* 제목 */
-#lettersTitle {
-  font-size: 24px;
-  font-weight: bold;
+/* 상단 컨테이너: 제목 + 입력창 + 버튼 */
+#topContainer {
+  display: flex;
+  flex-wrap: wrap;       /* 화면 좁으면 줄바꿈 */
+  align-items: center;   /* 수직 가운데 정렬 */
+  gap: 10px;             /* 요소 사이 간격 */
   margin: 10px;
 }
 
-/* 입력창 */
-input, button {
+#lettersTitle {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+#inputContainer {
+  display: flex;
+  gap: 5px;              /* input과 버튼 사이 간격 */
+  flex: 1 1 auto;        /* 남은 공간 채우기 */
+}
+
+#inputContainer input {
+  flex: 1 1 auto;        /* 입력창이 가변폭 */
   font-size: 16px;
   padding: 10px;
   box-sizing: border-box;
 }
-input#letterInput {
-  width: 100%;      /* 화면 폭 최대 */
-  max-width: 360px; /* 최대 폭 제한 */
-  margin: 10px auto;
-  display: block;
-}
 
-/* 버튼 스타일 */
-button {
+#inputContainer button {
+  flex: 0 0 auto;        /* 버튼은 고정폭 */
+  font-size: 16px;
+  padding: 10px;
   cursor: pointer;
-  margin: 2px;
   border-radius: 4px;
 }
 
@@ -93,10 +102,12 @@ li input.edit-input {
 }
 
 @media (max-width: 480px) {
-  li {
+  #topContainer {
+    flex-direction: column; /* 좁으면 세로 정렬 */
+    align-items: stretch;
+  }
+  #inputContainer {
     flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
   }
   li span, li input.edit-input {
     width: 100%;
@@ -112,10 +123,13 @@ li input.edit-input {
 </head>
 <body>
 
-<div id="lettersTitle">Letters 관리</div>
-
-<input type="text" id="letterInput" placeholder="글자 입력"/>
-<button id="addBtn">등록</button>
+<div id="topContainer">
+  <div id="lettersTitle">Letters 관리</div>
+  <div id="inputContainer">
+    <input type="text" id="letterInput" placeholder="글자 입력"/>
+    <button id="addBtn">등록</button>
+  </div>
+</div>
 
 <ul id="lettersList"></ul>
 
