@@ -35,15 +35,14 @@ ul {
   list-style: none;
   padding: 0;
   margin-top: 20px;
-  max-width: 45ch; /* 전체 목록 폭을 45글자 정도로 제한 */
-  /* margin-left: auto;
-  margin-right: auto; /* 가운데 정렬 */
-  */
+  max-width: 360px;   /* 45글자 폭 */
+  margin-left: 0;     /* ← 왼쪽에 붙이기 */
 }
 li {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: center; /* 세로 중앙 정렬 */
+  justify-content: flex-start; /* ← 왼쪽 정렬 */
   margin-bottom: 10px;
   background: #222;
   padding: 5px;
@@ -85,15 +84,14 @@ li input.edit-input {
     width: 100%; /* 입력창은 모바일에서 꽉 차도록 */
     margin-bottom: 10px;
   }
-  li {
+ li {
     flex-direction: row;
     align-items: center;
+    justify-content: flex-start; /* ← 왼쪽 정렬 유지 */
   }
   li span, li input.edit-input {
-    width: 100%;        /* 화면 폭 꽉 채우기 */
-    max-width: 360px;   /* 45글자 폭에 맞춘 픽셀 */
-    display: inline-block;
-    white-space: pre-wrap;
+    width: 100%;    /* 화면 폭 최대 */
+    max-width: 360px; /* 최대 폭 제한 */
   }
   li button {
     flex: 0 0 auto;
@@ -212,6 +210,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
