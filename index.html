@@ -45,6 +45,10 @@ li {
   word-break: break-word;
 }
 
+li span {
+  white-space: pre-wrap; /* 연속 띄어쓰기 + 줄바꿈 유지 */
+}
+  
 /* 제목 li */
 li.title-li {
   text-align: center;
@@ -128,7 +132,7 @@ const lettersList = document.getElementById("lettersList");
 
 // 글자 등록
 document.getElementById("addBtn").addEventListener("click", async () => {
-  const text = document.getElementById("letterInput").value.trim();
+  const text = document.getElementById("letterInput").value;
   if (!text) return alert("글자를 입력하세요.");
   await addDoc(lettersCol, { text, timestamp: Date.now() });
   document.getElementById("letterInput").value = "";
@@ -152,7 +156,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
-    const newText = inputEl.value.trim();
+    const newText = inputEl.value;
     if (!newText) return;
     await updateDoc(doc(db, "letters", id), { text: newText });
     spanEl.textContent = newText;
@@ -210,6 +214,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
