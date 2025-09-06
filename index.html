@@ -55,6 +55,12 @@ li input.edit-input {
   border: 2px solid #0a84ff;
 }
 
+/* 입력용 li */
+li.add-li {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 /* 버튼 색상 */
 .edit-btn {
   background: #0a84ff;
@@ -72,27 +78,24 @@ li input.edit-input {
   background: #0a84ff;
   color: white;
   border: none;
-  width: 100%;
-  max-width: 360px;
   padding: 10px;
   margin-top: 5px;
   cursor: pointer;
   border-radius: 4px;
-  display: block;
+  width: 100%;
 }
 
 /* 입력창 */
 input#letterInput {
   width: 100%;
-  max-width: 360px;
-  margin-top: 10px;
   padding: 10px;
-  display: block;
   box-sizing: border-box;
+  border: 2px solid #0a84ff;
+  border-radius: 4px;
 }
 
 @media (max-width: 480px) {
-  li span, li input.edit-input {
+  li span, li input.edit-input, li.add-li input, li.add-li button {
     width: 100%;
     max-width: 100%;
   }
@@ -107,12 +110,14 @@ input#letterInput {
 <body>
 
 <ul id="lettersList">
-  <!-- 제목도 li로 -->
+  <!-- 제목 -->
   <li><span>Letters 관리</span></li>
+  <!-- 입력창 + 등록 버튼 li -->
+  <li class="add-li">
+    <input type="text" id="letterInput" placeholder="글자 입력"/>
+    <button id="addBtn" class="add-btn">등록</button>
+  </li>
 </ul>
-
-<input type="text" id="letterInput" placeholder="글자 입력"/>
-<button id="addBtn" class="add-btn">등록</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -170,8 +175,8 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
 
 // 글자 목록 불러오기
 async function loadLetters() {
-  // 제목 제외하고 나머지 삭제
-  lettersList.querySelectorAll("li:not(:first-child)").forEach(li => li.remove());
+  // 제목 + 입력창 제외하고 나머지 삭제
+  lettersList.querySelectorAll("li:not(:first-child):not(.add-li)").forEach(li => li.remove());
 
   const q = query(lettersCol, orderBy("timestamp", "asc"));
   const snapshot = await getDocs(q);
