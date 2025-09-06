@@ -17,7 +17,7 @@ input, button {
   padding: 10px;
 }
 input#letterInput {
-  width: 25ch; /* 25글자 폭 */
+  width: 50ch; /* 50글자 폭 */
   max-width: 100%;
   margin-bottom: 10px;
   box-sizing: border-box;
@@ -49,11 +49,14 @@ li span {
   flex: 1 1 auto;
   word-break: break-word;
   margin-right: 5px;
+  width: 50ch; /* 수정 모드가 아니어도 폭 유지 */
+  max-width: 100%;
+  display: inline-block;
 }
 
 /* 수정 input */
 li input.edit-input {
-  width: 25ch; /* 25글자 폭 */
+  width: 50ch; /* 50글자 폭 */
   max-width: 100%;
   margin-right: 5px;
   display: none;
@@ -84,6 +87,7 @@ li input.edit-input {
   }
   li span, li input.edit-input {
     flex: 1 1 70%;
+    width: auto;
   }
   li button {
     flex: 0 0 auto;
@@ -144,7 +148,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     spanEl.style.display = "none";
     inputEl.style.display = "block";
     inputEl.focus();
-    inputEl.setSelectionRange(0, inputEl.value.length); // 전체 선택
+    inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
     // 저장 모드
@@ -153,7 +157,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     await updateDoc(doc(db, "letters", id), { text: newText });
     spanEl.textContent = newText;
     inputEl.style.display = "none";
-    spanEl.style.display = "block";
+    spanEl.style.display = "inline-block"; // 항상 폭 유지
     btnEl.textContent = "수정";
   }
 }
