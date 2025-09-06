@@ -4,15 +4,62 @@
   <meta charset="UTF-8">
   <title>Letters 관리</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
-    input { padding: 5px; margin-right: 5px; }
-    button { padding: 5px 10px; margin-right: 5px; cursor: pointer; }
-    ul { list-style: none; padding: 0; margin-top: 20px; }
-    li { margin-bottom: 5px; display: flex; align-items: center; }
-    li span { flex: 1; }
-    li button { margin-left: 5px; border: none; border-radius: 3px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #111;
+      color: white;
+    }
+    
+    input {
+      padding: 10px;       /* 입력창 터치 친화적으로 키움 */
+      margin-right: 5px;
+      font-size: 16px;
+      width: 60%;          /* 모바일 화면에서 적당히 넓게 */
+      max-width: 300px;
+    }
+    
+    button {
+      padding: 10px 15px;  /* 버튼 터치 친화적으로 키움 */
+      margin-right: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    
+    li {
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;   /* 모바일에서 버튼과 텍스트 줄바꿈 가능 */
+      align-items: center;
+    }
+    
+    li span {
+      flex: 1 1 100%;    /* 모바일에서는 span이 전체 너비 차지 */
+      margin-bottom: 5px;
+      word-break: break-word;  /* 긴 글자 줄바꿈 */
+    }
+    
+    li button {
+      margin-left: 0;
+      margin-right: 5px;
+      border: none;
+      border-radius: 3px;
+    }
+    
     .delete-btn { background: red; color: white; }
     .edit-btn { background: #0a84ff; color: white; }
+    
+    /* 반응형 미디어 쿼리 */
+    @media (min-width: 480px) {
+      li span { flex: 1; margin-bottom: 0; }  /* 넓은 화면에서는 원래대로 */
+      li button { margin-left: 5px; }
+    }
   </style>
 </head>
 <body>
@@ -106,3 +153,4 @@
 
 </body>
 </html>
+
