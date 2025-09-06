@@ -85,7 +85,7 @@ li input.edit-input {
 
 <h2>Letters 관리</h2>
 
-<input type="text" id="letterInput" placeholder="글자 입력" />
+<input type="text" id="letterInput" placeholder="글자 입력" maxlength="25"/>
 <button id="addBtn">등록</button>
 
 <ul id="lettersList"></ul>
@@ -125,11 +125,14 @@ async function deleteLetter(id) {
 
 // 글자 수정/저장 토글
 async function toggleEdit(id, spanEl, inputEl, btnEl) {
-  if (inputEl.style.display === "none") {
+  const isEditing = inputEl.style.display === "block";
+
+  if (!isEditing) {
     // 수정 모드
     spanEl.style.display = "none";
     inputEl.style.display = "block";
     inputEl.focus();
+    inputEl.setSelectionRange(0, inputEl.value.length); // 전체 선택
     btnEl.textContent = "저장";
   } else {
     // 저장 모드
@@ -158,6 +161,7 @@ async function loadLetters() {
     input.type = "text";
     input.className = "edit-input";
     input.value = docSnap.data().text;
+    input.maxLength = 25;
 
     const editBtn = document.createElement("button");
     editBtn.textContent = "수정";
