@@ -25,7 +25,7 @@ ul#lettersList {
   list-style: none;
   padding: 0 0px;      /* 좌우 여백 약간 */
   margin: 0 auto;
-  width: 42ch;          /* 화면 전체 폭 */
+  width: 100%;          /* 화면 전체 폭 */
   box-sizing: border-box;
 }
 
@@ -88,6 +88,10 @@ li.add-li {
 
 @media (max-width: 480px) {
   li .btn-row button { width: 48%; }
+  ul#lettersList {
+    width: 42ch;     /* PC에서는 고정 폭 */
+    margin: 0 auto;  /* 가운데 정렬 */
+  }
 }
 </style>
 </head>
@@ -206,6 +210,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
