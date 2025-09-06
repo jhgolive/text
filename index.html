@@ -18,6 +18,10 @@ body {
   text-align: center;
 }
 
+li.title-li {
+  text-align: center;  /* 가운데 정렬 */
+}
+
 /* 글자 목록 */
 ul#lettersList {
   list-style: none;
@@ -94,7 +98,7 @@ li.add-li {
 
 <ul id="lettersList">
   <!-- 제목 -->
-  <li><span>Letters 관리</span></li>
+  <li class="title-li"><span>텍스트 관리</span></li>
   <!-- 글자 목록은 JS에서 삽입 -->
   <!-- 입력창 + 등록 버튼 li -->
   <li class="add-li">
@@ -132,6 +136,8 @@ document.getElementById("addBtn").addEventListener("click", async () => {
 
 // 글자 삭제
 async function deleteLetter(id) {
+  const confirmDelete = confirm("정말 삭제하시겠습니까?");
+  if (!confirmDelete) return;
   await deleteDoc(doc(db, "letters", id));
   loadLetters();
 }
@@ -209,6 +215,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
