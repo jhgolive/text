@@ -2,21 +2,36 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>Letters 관리 (모바일 친화)</title>
+<title>Letters 관리 (모바일 최적화)</title>
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
-input, button { padding: 10px; font-size: 16px; }
-input[type=text] { width: 60%; max-width: 300px; margin-right: 5px; }
+input, button { font-size: 16px; padding: 10px; }
+input#letterInput { width: 60%; max-width: 300px; margin-right: 5px; }
 button { cursor: pointer; margin: 5px 2px; border-radius: 3px; }
+
 ul { list-style: none; padding: 0; margin-top: 20px; }
-li { margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; }
-li span { flex: 1 1 100%; margin-bottom: 5px; word-break: break-word; }
-li input.edit-input { flex: 1 1 60%; margin-bottom: 5px; display: none; }
+li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+  background: #222;
+  padding: 5px;
+  border-radius: 5px;
+}
+li button { margin: 2px; flex-shrink: 0; }
+li span { flex: 1 1 auto; word-break: break-word; margin-left: 5px; }
+li input.edit-input { flex: 1 1 auto; margin-left: 5px; display: none; }
+
 .edit-btn { background: #0a84ff; color: white; border: none; }
 .delete-btn { background: red; color: white; border: none; }
-@media (min-width: 480px) {
-  li span { flex: 1; margin-bottom: 0; }
-  li input.edit-input { flex: 1; }
+.save-btn { background: #28a745; color: white; border: none; }
+
+@media (max-width: 480px) {
+  input#letterInput { width: 100%; margin-bottom: 10px; }
+  li { flex-direction: row; align-items: center; }
+  li span, li input.edit-input { flex: 1 1 70%; margin-left: 5px; }
+  li button { flex: 0 0 auto; margin: 2px 2px 2px 0; }
 }
 </style>
 </head>
@@ -33,7 +48,6 @@ li input.edit-input { flex: 1 1 60%; margin-bottom: 5px; display: none; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-// Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
   authDomain: "mygps-11798.firebaseapp.com",
@@ -81,6 +95,19 @@ async function loadLetters() {
   snapshot.forEach(docSnap => {
     const li = document.createElement("li");
 
+    // 버튼 먼저 배치
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "저장";
+    saveBtn.className = "save-btn";
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "delete-btn";
+
     const span = document.createElement("span");
     span.textContent = docSnap.data().text;
 
@@ -89,34 +116,23 @@ async function loadLetters() {
     input.className = "edit-input";
     input.value = docSnap.data().text;
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.className = "edit-btn";
+    // 이벤트 연결
     editBtn.addEventListener("click", () => {
       span.style.display = "none";
       input.style.display = "block";
       input.focus();
     });
 
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") saveEdit(docSnap.id, input, span);
-    });
-
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "저장";
-    saveBtn.className = "edit-btn";
     saveBtn.addEventListener("click", () => saveEdit(docSnap.id, input, span));
-
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "삭제";
-    delBtn.className = "delete-btn";
+    input.addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(docSnap.id, input, span); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
-    li.appendChild(span);
-    li.appendChild(input);
     li.appendChild(editBtn);
     li.appendChild(saveBtn);
     li.appendChild(delBtn);
+    li.appendChild(span);
+    li.appendChild(input);
+
     lettersList.appendChild(li);
   });
 }
