@@ -1,3 +1,6 @@
+<input type="text" id="letterInput" placeholder="글자 입력" />
+<button id="addBtn">등록</button>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -14,12 +17,10 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  async function addLetter() {
+  const btn = document.getElementById("addBtn");
+  btn.addEventListener("click", async () => {
     const text = document.getElementById("letterInput").value;
     await addDoc(collection(db, "letters"), { text });
     alert("등록 완료!");
-  }
+  });
 </script>
-
-<input type="text" id="letterInput" placeholder="글자 입력" />
-<button onclick="addLetter()">등록</button>
