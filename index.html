@@ -4,12 +4,32 @@
 <meta charset="UTF-8">
 <title>Letters 관리 (모바일 최적화)</title>
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
-input, button { font-size: 16px; padding: 10px; }
-input#letterInput { width: 60%; max-width: 300px; margin-bottom: 10px; }
-button { cursor: pointer; margin: 5px 2px; border-radius: 3px; }
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background: #111;
+  color: white;
+}
+input, button {
+  font-size: 16px;
+  padding: 10px;
+}
+input#letterInput {
+  width: 60%;
+  max-width: 300px;
+  margin-bottom: 10px;
+}
+button {
+  cursor: pointer;
+  margin: 2px;
+  border-radius: 4px;
+}
 
-ul { list-style: none; padding: 0; margin-top: 20px; }
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+}
 li {
   display: flex;
   flex-wrap: wrap;
@@ -19,16 +39,45 @@ li {
   padding: 5px;
   border-radius: 5px;
 }
-li span { flex: 1 1 auto; word-break: break-word; }
-li input.edit-input { flex: 1 1 auto; display: none; }
+li span {
+  flex: 1 1 auto;
+  word-break: break-word;
+  margin-right: 5px;
+}
+li input.edit-input {
+  flex: 1 1 auto;
+  margin-right: 5px;
+  display: none;
+}
 
-.edit-btn { background: #0a84ff; color: white; border: none; margin-left: 5px; }
+.edit-btn {
+  background: #0a84ff;
+  color: white;
+  border: none;
+}
+.delete-btn {
+  background: red;
+  color: white;
+  border: none;
+}
 
 @media (max-width: 480px) {
-  input#letterInput { width: 100%; }
-  li { flex-direction: row; align-items: center; }
-  li span, li input.edit-input { flex: 1 1 70%; }
-  li button { flex: 0 0 auto; margin-left: 5px; margin-top: 2px; }
+  input#letterInput {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  li {
+    flex-direction: row;
+    align-items: center;
+  }
+  li span, li input.edit-input {
+    flex: 1 1 70%;
+  }
+  li button {
+    flex: 0 0 auto;
+    margin-left: 5px;
+    margin-top: 2px;
+  }
 }
 </style>
 </head>
@@ -74,7 +123,7 @@ async function deleteLetter(id) {
   loadLetters();
 }
 
-// 글자 수정/저장 (토글)
+// 글자 수정/저장 토글
 async function toggleEdit(id, spanEl, inputEl, btnEl) {
   if (inputEl.style.display === "none") {
     // 수정 모드
@@ -116,13 +165,14 @@ async function loadLetters() {
 
     const delBtn = document.createElement("button");
     delBtn.textContent = "삭제";
-    delBtn.className = "edit-btn";
-    delBtn.style.background = "red";
+    delBtn.className = "delete-btn";
 
+    // 이벤트 연결
     editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
     input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
+    // 글자 뒤에 버튼 배치
     li.appendChild(span);
     li.appendChild(input);
     li.appendChild(editBtn);
