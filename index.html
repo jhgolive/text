@@ -80,10 +80,9 @@ li input.edit-input {
   border: none;
 }
 
-/* 모바일 최적화 */
 @media (max-width: 480px) {
   input#letterInput {
-    width: 100%;
+    width: 100%; /* 입력창은 계속 화면 꽉 차도록 유지 */
     margin-bottom: 10px;
   }
   li {
@@ -91,8 +90,9 @@ li input.edit-input {
     align-items: center;
   }
   li span, li input.edit-input {
-    flex: 1 1 70%;
-    width: auto;
+    flex: 1 1 auto;
+    width: 45ch;   /* ← 모바일에서도 45ch 고정 */
+    max-width: 100%;
   }
   li button {
     flex: 0 0 auto;
@@ -100,6 +100,7 @@ li input.edit-input {
     margin-top: 2px;
   }
 }
+
 </style>
 </head>
 <body>
@@ -210,5 +211,6 @@ loadLetters();
 
 </body>
 </html>
+
 
 
