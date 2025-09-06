@@ -11,7 +11,11 @@ body {
   background: #111;
   color: white;
 }
-
+#lettersTitle {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
 /* 입력창 */
 input, button {
   font-size: 16px;
@@ -106,7 +110,7 @@ li input.edit-input {
 </head>
 <body>
 
-<h2>Letters 관리</h2>
+<div id="lettersTitle">Letters 관리</div>
 
 <input type="text" id="letterInput" placeholder="글자 입력"/>
 <button id="addBtn">등록</button>
@@ -212,4 +216,5 @@ loadLetters();
 
 </body>
 </html>
+
 
