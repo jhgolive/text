@@ -1,66 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>Letters 관리</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #111;
-      color: white;
-    }
-    
-    input {
-      padding: 10px;       /* 입력창 터치 친화적으로 키움 */
-      margin-right: 5px;
-      font-size: 16px;
-      width: 60%;          /* 모바일 화면에서 적당히 넓게 */
-      max-width: 300px;
-    }
-    
-    button {
-      padding: 10px 15px;  /* 버튼 터치 친화적으로 키움 */
-      margin-right: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    
-    ul {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-    
-    li {
-      margin-bottom: 10px;
-      display: flex;
-      flex-wrap: wrap;   /* 모바일에서 버튼과 텍스트 줄바꿈 가능 */
-      align-items: center;
-    }
-    
-    li span {
-      flex: 1 1 100%;    /* 모바일에서는 span이 전체 너비 차지 */
-      margin-bottom: 5px;
-      word-break: break-word;  /* 긴 글자 줄바꿈 */
-    }
-    
-    li button {
-      margin-left: 0;
-      margin-right: 5px;
-      border: none;
-      border-radius: 3px;
-    }
-    
-    .delete-btn { background: red; color: white; }
-    .edit-btn { background: #0a84ff; color: white; }
-    
-    /* 반응형 미디어 쿼리 */
-    @media (min-width: 480px) {
-      li span { flex: 1; margin-bottom: 0; }  /* 넓은 화면에서는 원래대로 */
-      li button { margin-left: 5px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Letters 관리 (모바일 친화)</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
+input, button { padding: 10px; font-size: 16px; }
+input[type=text] { width: 60%; max-width: 300px; margin-right: 5px; }
+button { cursor: pointer; margin: 5px 2px; border-radius: 3px; }
+ul { list-style: none; padding: 0; margin-top: 20px; }
+li { margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center; }
+li span { flex: 1 1 100%; margin-bottom: 5px; word-break: break-word; }
+li input.edit-input { flex: 1 1 60%; margin-bottom: 5px; display: none; }
+.edit-btn { background: #0a84ff; color: white; border: none; }
+.delete-btn { background: red; color: white; border: none; }
+@media (min-width: 480px) {
+  li span { flex: 1; margin-bottom: 0; }
+  li input.edit-input { flex: 1; }
+}
+</style>
 </head>
 <body>
 
@@ -72,85 +30,99 @@
 <ul id="lettersList"></ul>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-  // 🔹 Firebase 설정
-  const firebaseConfig = {
-    apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
-    authDomain: "mygps-11798.firebaseapp.com",
-    projectId: "mygps-11798",
-    storageBucket: "mygps-11798.firebasestorage.app",
-    messagingSenderId: "271371741627",
-    appId: "1:271371741627:web:642901f43c5ad57d80bc9e"
-  };
+// Firebase 설정
+const firebaseConfig = {
+  apiKey: "AIzaSyAQGtOEcxFxl9FV7NASLgxLDc23u2vzS_0",
+  authDomain: "mygps-11798.firebaseapp.com",
+  projectId: "mygps-11798",
+  storageBucket: "mygps-11798.firebasestorage.app",
+  messagingSenderId: "271371741627",
+  appId: "1:271371741627:web:642901f43c5ad57d80bc9e"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const lettersCol = collection(db, "letters");
-  const lettersList = document.getElementById("lettersList");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const lettersCol = collection(db, "letters");
+const lettersList = document.getElementById("lettersList");
 
-  // 🔹 글자 등록
-  document.getElementById("addBtn").addEventListener("click", async () => {
-    const text = document.getElementById("letterInput").value.trim();
-    if (!text) return alert("글자를 입력하세요.");
-
-    await addDoc(lettersCol, { 
-      text, 
-      timestamp: Date.now() // 등록 시간 추가
-    });
-    document.getElementById("letterInput").value = "";
-    loadLetters();
-  });
-
-  // 🔹 글자 삭제
-  async function deleteLetter(id) {
-    await deleteDoc(doc(db, "letters", id));
-    loadLetters();
-  }
-
-  // 🔹 글자 수정 (timestamp 업데이트 없음)
-  async function editLetter(id, oldText) {
-    const newText = prompt("새 글자를 입력하세요:", oldText);
-    if (newText && newText.trim() !== "") {
-      await updateDoc(doc(db, "letters", id), { 
-        text: newText.trim() // timestamp는 그대로 유지
-      });
-      loadLetters();
-    }
-  }
-
-  // 🔹 글자 목록 불러오기 (등록 순서 기준)
-  async function loadLetters() {
-    lettersList.innerHTML = "";
-    const q = query(lettersCol, orderBy("timestamp", "asc")); // 오름차순 정렬
-    const snapshot = await getDocs(q);
-    snapshot.forEach(docSnap => {
-      const li = document.createElement("li");
-      const span = document.createElement("span");
-      span.textContent = docSnap.data().text;
-
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "수정";
-      editBtn.className = "edit-btn";
-      editBtn.addEventListener("click", () => editLetter(docSnap.id, docSnap.data().text));
-
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "삭제";
-      delBtn.className = "delete-btn";
-      delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
-
-      li.appendChild(span);
-      li.appendChild(editBtn);
-      li.appendChild(delBtn);
-      lettersList.appendChild(li);
-    });
-  }
-
-  // 초기 로드
+// 글자 등록
+document.getElementById("addBtn").addEventListener("click", async () => {
+  const text = document.getElementById("letterInput").value.trim();
+  if (!text) return alert("글자를 입력하세요.");
+  await addDoc(lettersCol, { text, timestamp: Date.now() });
+  document.getElementById("letterInput").value = "";
   loadLetters();
+});
+
+// 글자 삭제
+async function deleteLetter(id) {
+  await deleteDoc(doc(db, "letters", id));
+  loadLetters();
+}
+
+// 글자 수정 (인라인)
+async function saveEdit(id, inputEl, spanEl) {
+  const newText = inputEl.value.trim();
+  if (!newText) return;
+  await updateDoc(doc(db, "letters", id), { text: newText });
+  spanEl.textContent = newText;
+  inputEl.style.display = "none";
+  spanEl.style.display = "block";
+}
+
+// 글자 목록 불러오기
+async function loadLetters() {
+  lettersList.innerHTML = "";
+  const q = query(lettersCol, orderBy("timestamp", "asc"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(docSnap => {
+    const li = document.createElement("li");
+
+    const span = document.createElement("span");
+    span.textContent = docSnap.data().text;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "edit-input";
+    input.value = docSnap.data().text;
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
+    editBtn.addEventListener("click", () => {
+      span.style.display = "none";
+      input.style.display = "block";
+      input.focus();
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveEdit(docSnap.id, input, span);
+    });
+
+    const saveBtn = document.createElement("button");
+    saveBtn.textContent = "저장";
+    saveBtn.className = "edit-btn";
+    saveBtn.addEventListener("click", () => saveEdit(docSnap.id, input, span));
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "delete-btn";
+    delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
+
+    li.appendChild(span);
+    li.appendChild(input);
+    li.appendChild(editBtn);
+    li.appendChild(saveBtn);
+    li.appendChild(delBtn);
+    lettersList.appendChild(li);
+  });
+}
+
+loadLetters();
 </script>
 
 </body>
 </html>
-
