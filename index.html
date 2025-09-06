@@ -6,7 +6,7 @@
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; background: #111; color: white; }
 input, button { font-size: 16px; padding: 10px; }
-input#letterInput { width: 60%; max-width: 300px; margin-right: 5px; }
+input#letterInput { width: 60%; max-width: 300px; margin-bottom: 10px; }
 button { cursor: pointer; margin: 5px 2px; border-radius: 3px; }
 
 ul { list-style: none; padding: 0; margin-top: 20px; }
@@ -19,19 +19,16 @@ li {
   padding: 5px;
   border-radius: 5px;
 }
-li button { margin: 2px; flex-shrink: 0; }
-li span { flex: 1 1 auto; word-break: break-word; margin-left: 5px; }
-li input.edit-input { flex: 1 1 auto; margin-left: 5px; display: none; }
+li span { flex: 1 1 auto; word-break: break-word; }
+li input.edit-input { flex: 1 1 auto; display: none; }
 
-.edit-btn { background: #0a84ff; color: white; border: none; }
-.delete-btn { background: red; color: white; border: none; }
-.save-btn { background: #28a745; color: white; border: none; }
+.edit-btn { background: #0a84ff; color: white; border: none; margin-left: 5px; }
 
 @media (max-width: 480px) {
-  input#letterInput { width: 100%; margin-bottom: 10px; }
+  input#letterInput { width: 100%; }
   li { flex-direction: row; align-items: center; }
-  li span, li input.edit-input { flex: 1 1 70%; margin-left: 5px; }
-  li button { flex: 0 0 auto; margin: 2px 2px 2px 0; }
+  li span, li input.edit-input { flex: 1 1 70%; }
+  li button { flex: 0 0 auto; margin-left: 5px; margin-top: 2px; }
 }
 </style>
 </head>
@@ -77,14 +74,24 @@ async function deleteLetter(id) {
   loadLetters();
 }
 
-// 글자 수정 (인라인)
-async function saveEdit(id, inputEl, spanEl) {
-  const newText = inputEl.value.trim();
-  if (!newText) return;
-  await updateDoc(doc(db, "letters", id), { text: newText });
-  spanEl.textContent = newText;
-  inputEl.style.display = "none";
-  spanEl.style.display = "block";
+// 글자 수정/저장 (토글)
+async function toggleEdit(id, spanEl, inputEl, btnEl) {
+  if (inputEl.style.display === "none") {
+    // 수정 모드
+    spanEl.style.display = "none";
+    inputEl.style.display = "block";
+    inputEl.focus();
+    btnEl.textContent = "저장";
+  } else {
+    // 저장 모드
+    const newText = inputEl.value.trim();
+    if (!newText) return;
+    await updateDoc(doc(db, "letters", id), { text: newText });
+    spanEl.textContent = newText;
+    inputEl.style.display = "none";
+    spanEl.style.display = "block";
+    btnEl.textContent = "수정";
+  }
 }
 
 // 글자 목록 불러오기
@@ -95,19 +102,6 @@ async function loadLetters() {
   snapshot.forEach(docSnap => {
     const li = document.createElement("li");
 
-    // 버튼 먼저 배치
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "수정";
-    editBtn.className = "edit-btn";
-
-    const saveBtn = document.createElement("button");
-    saveBtn.textContent = "저장";
-    saveBtn.className = "save-btn";
-
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "삭제";
-    delBtn.className = "delete-btn";
-
     const span = document.createElement("span");
     span.textContent = docSnap.data().text;
 
@@ -116,22 +110,23 @@ async function loadLetters() {
     input.className = "edit-input";
     input.value = docSnap.data().text;
 
-    // 이벤트 연결
-    editBtn.addEventListener("click", () => {
-      span.style.display = "none";
-      input.style.display = "block";
-      input.focus();
-    });
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
 
-    saveBtn.addEventListener("click", () => saveEdit(docSnap.id, input, span));
-    input.addEventListener("keydown", e => { if (e.key === "Enter") saveEdit(docSnap.id, input, span); });
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "edit-btn";
+    delBtn.style.background = "red";
+
+    editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
+    input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
-    li.appendChild(editBtn);
-    li.appendChild(saveBtn);
-    li.appendChild(delBtn);
     li.appendChild(span);
     li.appendChild(input);
+    li.appendChild(editBtn);
+    li.appendChild(delBtn);
 
     lettersList.appendChild(li);
   });
