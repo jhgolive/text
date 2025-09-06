@@ -26,7 +26,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
   // 🔹 Firebase 설정
   const firebaseConfig = {
@@ -48,7 +48,10 @@
     const text = document.getElementById("letterInput").value.trim();
     if (!text) return alert("글자를 입력하세요.");
 
-    await addDoc(lettersCol, { text });
+    await addDoc(lettersCol, { 
+      text, 
+      timestamp: Date.now() // 등록 시간 추가
+    });
     document.getElementById("letterInput").value = "";
     loadLetters();
   });
@@ -59,19 +62,22 @@
     loadLetters();
   }
 
-  // 🔹 글자 수정
+  // 🔹 글자 수정 (timestamp 업데이트 없음)
   async function editLetter(id, oldText) {
     const newText = prompt("새 글자를 입력하세요:", oldText);
     if (newText && newText.trim() !== "") {
-      await updateDoc(doc(db, "letters", id), { text: newText.trim() });
+      await updateDoc(doc(db, "letters", id), { 
+        text: newText.trim() // timestamp는 그대로 유지
+      });
       loadLetters();
     }
   }
 
-  // 🔹 글자 목록 불러오기
+  // 🔹 글자 목록 불러오기 (등록 순서 기준)
   async function loadLetters() {
     lettersList.innerHTML = "";
-    const snapshot = await getDocs(lettersCol);
+    const q = query(lettersCol, orderBy("timestamp", "asc")); // 오름차순 정렬
+    const snapshot = await getDocs(q);
     snapshot.forEach(docSnap => {
       const li = document.createElement("li");
       const span = document.createElement("span");
