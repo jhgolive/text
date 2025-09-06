@@ -22,30 +22,15 @@ li.title-li {
   text-align: center;  /* 가운데 정렬 */
 }
 
-/* 글자 목록 */
 ul#lettersList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   width: 100%;
-  max-width: 480px;
+  max-width: 100%; /* 수정 */
+  padding: 0 10px; /* 좌우 여백 조금만 */
   box-sizing: border-box;
 }
 
-/* li 스타일 */
 li {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  margin-bottom: 10px;
-  background: #222;
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid #0a84ff;
-  box-sizing: border-box;
-  text-align: left;       /* 왼쪽 정렬 */
-  max-width: 41ch;        /* 글자 41자 정도 폭 제한 */
-  word-break: break-word;
+  max-width: 100%; /* 화면 폭에 맞춤 */
 }
 
 li span {
@@ -216,6 +201,7 @@ loadLetters();
 
 </body>
 </html>
+
 
 
 
