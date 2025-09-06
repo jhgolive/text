@@ -11,23 +11,37 @@ body {
   color: white;
 }
 
-/* 입력창 */
-input, button {
-  font-size: 16px;
-  padding: 10px;
+/* 입력창 + 버튼 */
+.input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
 }
 input#letterInput {
   width: 25ch; /* 25글자 폭 */
   max-width: 100%;
-  margin-bottom: 10px;
   box-sizing: border-box;
+}
+button#addBtn {
+  margin-left: 5px;
+  flex: 0 0 auto;
 }
 
 /* 버튼 스타일 */
 button {
   cursor: pointer;
-  margin: 2px;
   border-radius: 4px;
+  padding: 10px;
+}
+.edit-btn {
+  background: #0a84ff;
+  color: white;
+  border: none;
+}
+.delete-btn {
+  background: red;
+  color: white;
+  border: none;
 }
 
 /* 글자 목록 */
@@ -50,8 +64,6 @@ li span {
   word-break: break-word;
   margin-right: 5px;
 }
-
-/* 수정 input */
 li input.edit-input {
   width: 25ch; /* 25글자 폭 */
   max-width: 100%;
@@ -60,27 +72,17 @@ li input.edit-input {
   box-sizing: border-box;
 }
 
-/* 버튼 색상 */
-.edit-btn {
-  background: #0a84ff;
-  color: white;
-  border: none;
-}
-.delete-btn {
-  background: red;
-  color: white;
-  border: none;
-}
-
 /* 모바일 최적화 */
 @media (max-width: 480px) {
+  .input-group {
+    flex-wrap: wrap;
+  }
   input#letterInput {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
   }
-  li {
-    flex-direction: row;
-    align-items: center;
+  button#addBtn {
+    margin-left: 0;
   }
   li span, li input.edit-input {
     flex: 1 1 70%;
@@ -97,8 +99,10 @@ li input.edit-input {
 
 <h2>Letters 관리</h2>
 
-<input type="text" id="letterInput" placeholder="글자 입력"/>
-<button id="addBtn">등록</button>
+<div class="input-group">
+  <input type="text" id="letterInput" placeholder="글자 입력"/>
+  <button id="addBtn">등록</button>
+</div>
 
 <ul id="lettersList"></ul>
 
@@ -144,7 +148,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     spanEl.style.display = "none";
     inputEl.style.display = "block";
     inputEl.focus();
-    inputEl.setSelectionRange(0, inputEl.value.length); // 전체 선택
+    inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
     // 저장 모드
@@ -182,11 +186,11 @@ async function loadLetters() {
     delBtn.textContent = "삭제";
     delBtn.className = "delete-btn";
 
-    // 이벤트 연결
     editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
     input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
+    // 텍스트 바로 뒤에 버튼 배치
     li.appendChild(span);
     li.appendChild(input);
     li.appendChild(editBtn);
