@@ -10,33 +10,7 @@ body {
   margin: 0;
   background: #111;
   color: white;
-}
-
-/* 제목 */
-#lettersTitle {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 10px;
-}
-
-/* 입력창 */
-input, button {
-  font-size: 16px;
-  padding: 10px;
   box-sizing: border-box;
-}
-input#letterInput {
-  width: 100%;      /* 화면 폭 최대 */
-  max-width: 360px; /* 최대 폭 제한 */
-  margin: 10px auto;
-  display: block;
-}
-
-/* 버튼 스타일 */
-button {
-  cursor: pointer;
-  margin: 2px;
-  border-radius: 4px;
 }
 
 /* 글자 목록 */
@@ -49,6 +23,7 @@ ul {
   box-sizing: border-box;
 }
 
+/* li 스타일 */
 li {
   display: flex;
   flex-wrap: wrap;
@@ -85,39 +60,59 @@ li input.edit-input {
   background: #0a84ff;
   color: white;
   border: none;
+  margin-top: 5px;
 }
 .delete-btn {
   background: red;
   color: white;
   border: none;
+  margin-top: 5px;
+}
+.add-btn {
+  background: #0a84ff;
+  color: white;
+  border: none;
+  width: 100%;
+  max-width: 360px;
+  padding: 10px;
+  margin-top: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: block;
+}
+
+/* 입력창 */
+input#letterInput {
+  width: 100%;
+  max-width: 360px;
+  margin-top: 10px;
+  padding: 10px;
+  display: block;
+  box-sizing: border-box;
 }
 
 @media (max-width: 480px) {
-  li {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-  }
   li span, li input.edit-input {
     width: 100%;
     max-width: 100%;
   }
   li button {
     flex: 0 0 auto;
-    margin-left: 5px;
-    margin-top: 2px;
+    margin-left: 0;
+    margin-top: 5px;
   }
 }
 </style>
 </head>
 <body>
 
-<div id="lettersTitle">Letters 관리</div>
+<ul id="lettersList">
+  <!-- 제목도 li로 -->
+  <li><span>Letters 관리</span></li>
+</ul>
 
 <input type="text" id="letterInput" placeholder="글자 입력"/>
-<button id="addBtn">등록</button>
-
-<ul id="lettersList"></ul>
+<button id="addBtn" class="add-btn">등록</button>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -175,7 +170,9 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
 
 // 글자 목록 불러오기
 async function loadLetters() {
-  lettersList.innerHTML = "";
+  // 제목 제외하고 나머지 삭제
+  lettersList.querySelectorAll("li:not(:first-child)").forEach(li => li.remove());
+
   const q = query(lettersCol, orderBy("timestamp", "asc"));
   const snapshot = await getDocs(q);
   snapshot.forEach(docSnap => {
