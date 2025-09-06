@@ -42,17 +42,29 @@ li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
-  margin-bottom: 0; /* 줄 간격만 필요하면 margin-bottom:10px 유지 가능 */
+  justify-content: flex-start; /* 왼쪽 정렬 */
+  margin-bottom: 10px;
   background: #222;
-  padding: 0;        /* 글자 폭 확보 */
+  padding: 5px;
   border-radius: 5px;
 }
-li span, li input.edit-input {
-  margin-right: 0;   /* 여백 제거 */
+li span {
+  flex: 1 1 auto;
+  word-break: break-word;
+  margin-right: 5px;
   width: 45ch;
-  white-space: pre-wrap;
+  max-width: 100%;
   display: inline-block;
+  white-space: pre-wrap; /* ★ 띄어쓰기/줄바꿈 유지 */
+}
+
+/* 수정 input */
+li input.edit-input {
+  width: 45ch; /* 45글자 폭 */
+  max-width: 100%;
+  margin-right: 5px;
+  display: none;
+  box-sizing: border-box;
 }
 
 /* 버튼 색상 */
@@ -198,12 +210,3 @@ loadLetters();
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
