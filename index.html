@@ -112,13 +112,12 @@ input#letterInput {
 <ul id="lettersList">
   <!-- 제목 -->
   <li><span>Letters 관리</span></li>
+  <!-- 입력창 + 등록 버튼 li -->
+  <li class="add-li">
+    <input type="text" id="letterInput" placeholder="글자 입력"/>
+    <button id="addBtn" class="add-btn">등록</button>
+  </li>
 </ul>
-
-<!-- 입력창 + 등록 버튼 li를 ul 마지막에 넣기 -->
-<li class="add-li">
-  <input type="text" id="letterInput" placeholder="글자 입력"/>
-  <button id="addBtn" class="add-btn">등록</button>
-</li>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -137,7 +136,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const lettersCol = collection(db, "letters");
 const lettersList = document.getElementById("lettersList");
-const addLi = document.querySelector(".add-li");
 
 // 글자 등록
 document.getElementById("addBtn").addEventListener("click", async () => {
@@ -210,8 +208,7 @@ async function loadLetters() {
     li.appendChild(editBtn);
     li.appendChild(delBtn);
 
-    // 항상 입력창 li 다음에 추가
-    lettersList.insertBefore(li, addLi);
+    lettersList.appendChild(li);
   });
 }
 
