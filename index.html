@@ -24,15 +24,15 @@ ul#lettersList {
   padding: 0;
   margin: 0;
   width: 100%;
-  max-width: 480px; /* 모바일 화면 중앙 */
+  max-width: 480px;
   box-sizing: border-box;
 }
 
 /* li 스타일 */
 li {
   display: flex;
-  flex-direction: column; /* 세로 정렬 */
-  align-items: stretch; /* 좌우 꽉 채움 */
+  flex-direction: column;
+  align-items: stretch;
   margin-bottom: 10px;
   background: #222;
   padding: 10px;
@@ -45,6 +45,13 @@ li span {
   display: block;
   word-break: break-word;
   margin-bottom: 5px;
+}
+
+/* 버튼 row */
+li .btn-row {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
 }
 
 /* 수정 input */
@@ -60,15 +67,14 @@ li input.edit-input {
 /* 버튼 스타일 */
 li button {
   padding: 10px;
-  margin-top: 5px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 16px;
 }
 
-.edit-btn { background: #0a84ff; color: white; }
-.delete-btn { background: red; color: white; }
+.edit-btn { background: #0a84ff; color: white; flex: 1; }
+.delete-btn { background: red; color: white; flex: 1; }
 .add-btn { background: #0a84ff; color: white; width: 100%; }
 
 li.add-li {
@@ -78,7 +84,7 @@ li.add-li {
 
 @media (max-width: 480px) {
   li { margin-bottom: 10px; }
-  li button { width: 100%; }
+  li .btn-row button { width: 48%; }
 }
 </style>
 </head>
@@ -87,6 +93,7 @@ li.add-li {
 <ul id="lettersList">
   <!-- 제목 -->
   <li><span>Letters 관리</span></li>
+  <!-- 글자 목록은 JS에서 삽입 -->
   <!-- 입력창 + 등록 버튼 li -->
   <li class="add-li">
     <input type="text" id="letterInput" placeholder="글자 입력"/>
@@ -166,6 +173,10 @@ async function loadLetters() {
     input.className = "edit-input";
     input.value = docSnap.data().text;
 
+    // 버튼 row 생성
+    const btnRow = document.createElement("div");
+    btnRow.className = "btn-row";
+
     const editBtn = document.createElement("button");
     editBtn.textContent = "수정";
     editBtn.className = "edit-btn";
@@ -178,12 +189,16 @@ async function loadLetters() {
     input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
+    btnRow.appendChild(editBtn);
+    btnRow.appendChild(delBtn);
+
     li.appendChild(span);
     li.appendChild(input);
-    li.appendChild(editBtn);
-    li.appendChild(delBtn);
+    li.appendChild(btnRow);
 
-    lettersList.appendChild(li);
+    // 입력창 li 아래 삽입
+    const addLi = lettersList.querySelector(".add-li");
+    lettersList.insertBefore(li, addLi);
   });
 }
 
