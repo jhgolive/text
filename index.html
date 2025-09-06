@@ -6,60 +6,85 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  padding: 20px;
+  padding: 15px;
   background: #111;
   color: white;
+  margin: 0;
 }
 
-/* 입력창 */
-input, button {
-  font-size: 16px;
-  padding: 10px;
+/* 입력 영역 */
+.input-group {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
 }
 input#letterInput {
+  flex: 1 1 auto;
   width: 50ch; /* 50글자 폭 */
   max-width: 100%;
-  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 16px;
   box-sizing: border-box;
+  border-radius: 4px;
+  border: none;
+}
+button#addBtn {
+  flex: 0 0 auto;
+  padding: 10px 15px;
+  font-size: 16px;
+  margin-left: 5px;
+  border-radius: 4px;
+  border: none;
+  background: #28a745;
+  color: white;
+  cursor: pointer;
 }
 
-/* 버튼 스타일 */
+/* 버튼 공통 */
 button {
-  cursor: pointer;
+  font-size: 16px;
+  padding: 8px 12px;
   margin: 2px;
   border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  min-width: 60px;
 }
 
 /* 글자 목록 */
 ul {
   list-style: none;
   padding: 0;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 li {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 10px;
   background: #222;
-  padding: 5px;
-  border-radius: 5px;
+  padding: 8px;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 li span {
   flex: 1 1 auto;
   word-break: break-word;
-  margin-right: 5px;
-  width: 50ch; /* 수정 모드가 아니어도 폭 유지 */
+  margin-right: 10px;
+  width: 50ch; /* 기본 폭 */
   max-width: 100%;
   display: inline-block;
 }
-
-/* 수정 input */
 li input.edit-input {
-  width: 50ch; /* 50글자 폭 */
+  width: 50ch;
   max-width: 100%;
-  margin-right: 5px;
+  margin-right: 10px;
   display: none;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
   box-sizing: border-box;
 }
 
@@ -67,32 +92,36 @@ li input.edit-input {
 .edit-btn {
   background: #0a84ff;
   color: white;
-  border: none;
 }
 .delete-btn {
   background: red;
   color: white;
-  border: none;
 }
 
 /* 모바일 최적화 */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  .input-group {
+    flex-direction: column;
+  }
   input#letterInput {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+  }
+  button#addBtn {
+    width: 100%;
+    margin-left: 0;
   }
   li {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
   }
   li span, li input.edit-input {
-    flex: 1 1 70%;
-    width: auto;
+    width: 100%;
+    margin-bottom: 8px;
   }
   li button {
-    flex: 0 0 auto;
-    margin-left: 5px;
-    margin-top: 2px;
+    width: 100%;
+    margin: 3px 0;
   }
 }
 </style>
@@ -101,8 +130,10 @@ li input.edit-input {
 
 <h2>Letters 관리</h2>
 
-<input type="text" id="letterInput" placeholder="글자 입력"/>
-<button id="addBtn">등록</button>
+<div class="input-group">
+  <input type="text" id="letterInput" placeholder="글자 입력"/>
+  <button id="addBtn">등록</button>
+</div>
 
 <ul id="lettersList"></ul>
 
@@ -144,20 +175,18 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
   const isEditing = inputEl.style.display === "block";
 
   if (!isEditing) {
-    // 수정 모드
     spanEl.style.display = "none";
     inputEl.style.display = "block";
     inputEl.focus();
     inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
-    // 저장 모드
     const newText = inputEl.value.trim();
     if (!newText) return;
     await updateDoc(doc(db, "letters", id), { text: newText });
     spanEl.textContent = newText;
     inputEl.style.display = "none";
-    spanEl.style.display = "inline-block"; // 항상 폭 유지
+    spanEl.style.display = "inline-block";
     btnEl.textContent = "수정";
   }
 }
