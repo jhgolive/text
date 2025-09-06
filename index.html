@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>텍스트 관리</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* 전체 body 설정 */
 body {
   margin: 0;
   padding: 10px;
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;  /* 좌우 꽉 차도록 */
   min-height: 100vh;
   background: #111;
   color: white;
@@ -18,18 +20,12 @@ body {
   text-align: center;
 }
 
-li.title-li {
-  text-align: center;  /* 가운데 정렬 */
-}
-
 /* 글자 목록 */
 ul#lettersList {
   list-style: none;
-  padding: 0;
+  padding: 0 10px;      /* 좌우 여백 약간 */
   margin: 0;
-  width: 100%;
-  max-width: 100%; /* 수정 */
-  padding: 0 10px; /* 좌우 여백 조금만 */
+  width: 100%;          /* 화면 전체 폭 */
   box-sizing: border-box;
 }
 
@@ -37,21 +33,21 @@ ul#lettersList {
 li {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: stretch; /* 좌우 꽉 차도록 */
   margin-bottom: 10px;
   background: #222;
   padding: 10px;
   border-radius: 8px;
   border: 2px solid #0a84ff;
   box-sizing: border-box;
-  text-align: left;       /* 왼쪽 정렬 */
-  max-width: 100%;        /* 글자 41자 정도 폭 제한 */
+  text-align: left;
+  width: 100%;          /* 화면 폭에 맞춤 */
   word-break: break-word;
 }
 
-li span {
-  display: block;
-  margin-bottom: 5px;
+/* 제목 li */
+li.title-li {
+  text-align: center;
 }
 
 /* 버튼 row */
@@ -91,7 +87,6 @@ li.add-li {
 }
 
 @media (max-width: 480px) {
-  li { margin-bottom: 10px; }
   li .btn-row button { width: 48%; }
 }
 </style>
@@ -129,7 +124,7 @@ const lettersList = document.getElementById("lettersList");
 
 // 글자 등록
 document.getElementById("addBtn").addEventListener("click", async () => {
-  const text = document.getElementById("letterInput").value;
+  const text = document.getElementById("letterInput").value.trim();
   if (!text) return alert("글자를 입력하세요.");
   await addDoc(lettersCol, { text, timestamp: Date.now() });
   document.getElementById("letterInput").value = "";
@@ -138,8 +133,7 @@ document.getElementById("addBtn").addEventListener("click", async () => {
 
 // 글자 삭제
 async function deleteLetter(id) {
-  const confirmDelete = confirm("정말 삭제하시겠습니까?");
-  if (!confirmDelete) return;
+  if (!confirm("정말 삭제하시겠습니까?")) return;
   await deleteDoc(doc(db, "letters", id));
   loadLetters();
 }
@@ -147,7 +141,6 @@ async function deleteLetter(id) {
 // 글자 수정/저장 토글
 async function toggleEdit(id, spanEl, inputEl, btnEl) {
   const isEditing = inputEl.style.display === "block";
-
   if (!isEditing) {
     spanEl.style.display = "none";
     inputEl.style.display = "block";
@@ -155,7 +148,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
     inputEl.setSelectionRange(0, inputEl.value.length);
     btnEl.textContent = "저장";
   } else {
-    const newText = inputEl.value;
+    const newText = inputEl.value.trim();
     if (!newText) return;
     await updateDoc(doc(db, "letters", id), { text: newText });
     spanEl.textContent = newText;
@@ -167,9 +160,7 @@ async function toggleEdit(id, spanEl, inputEl, btnEl) {
 
 // 글자 목록 불러오기
 async function loadLetters() {
-  // 제목 + 입력창 제외하고 나머지 삭제
   lettersList.querySelectorAll("li:not(:first-child):not(.add-li)").forEach(li => li.remove());
-
   const q = query(lettersCol, orderBy("timestamp", "asc"));
   const snapshot = await getDocs(q);
   snapshot.forEach(docSnap => {
@@ -183,20 +174,18 @@ async function loadLetters() {
     input.className = "edit-input";
     input.value = docSnap.data().text;
 
-    // 버튼 row 생성
     const btnRow = document.createElement("div");
     btnRow.className = "btn-row";
 
     const editBtn = document.createElement("button");
     editBtn.textContent = "수정";
     editBtn.className = "edit-btn";
+    editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
+    input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
 
     const delBtn = document.createElement("button");
     delBtn.textContent = "삭제";
     delBtn.className = "delete-btn";
-
-    editBtn.addEventListener("click", () => toggleEdit(docSnap.id, span, input, editBtn));
-    input.addEventListener("keydown", e => { if (e.key === "Enter") toggleEdit(docSnap.id, span, input, editBtn); });
     delBtn.addEventListener("click", () => deleteLetter(docSnap.id));
 
     btnRow.appendChild(editBtn);
@@ -206,12 +195,12 @@ async function loadLetters() {
     li.appendChild(input);
     li.appendChild(btnRow);
 
-    // 입력창 li 아래 삽입
     const addLi = lettersList.querySelector(".add-li");
     lettersList.insertBefore(li, addLi);
   });
 }
 
+// 초기 로드
 loadLetters();
 </script>
 
