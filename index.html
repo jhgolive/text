@@ -303,7 +303,8 @@ async function loadWordList() {
         select.style.display = "block";
         editBtn.textContent = "저장";
       } else {
-        const newWords = input.value.split(",");
+        //const newWords = input.value.split(",");
+        const newWords = input.value.split(",").map(w => w.trim());
         const newColor = select.value;
         await updateDoc(doc(db, "wordList", docSnap.id), { words: newWords, color: newColor });
         //span.textContent = `${newWords.join(", ")} (${newColor})`;
@@ -344,4 +345,5 @@ loadWordList();
 
 </body>
 </html>
+
 
