@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -22,6 +22,14 @@ body {
 
 /* 글자 목록 */
 ul#lettersList {
+  list-style: none;
+  padding: 0 0px;      /* 좌우 여백 약간 */
+  margin: 0 auto;
+  width: 45ch;          /* 화면 전체 폭 */
+  box-sizing: border-box;
+}
+
+ul#wordListList {
   list-style: none;
   padding: 0 0px;      /* 좌우 여백 약간 */
   margin: 0 auto;
@@ -59,6 +67,7 @@ li .btn-row {
   display: flex;
   gap: 5px;
   justify-content: flex-end;
+  margin-top: 5px;  /* ← 텍스트와 버튼 사이 여백 추가 */
 }
 
 /* 수정 input */
@@ -87,13 +96,17 @@ li button {
 li.add-li {
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 5px;
 }
 
 @media (max-width: 480px) {
   li .btn-row button { width: 48%; }
   ul#lettersList {
-    width: 41ch;     /* PC에서는 고정 폭 */
+    width: 42ch;     /* PC에서는 고정 폭 */
+    margin: 0 auto;  /* 가운데 정렬 */
+  }
+  ul#wordListList {
+    width: 42ch;     /* PC에서는 고정 폭 */
     margin: 0 auto;  /* 가운데 정렬 */
   }
 }
@@ -122,6 +135,18 @@ li.add-li {
 ★ Freedom is not free ★ 자유는 그냥 오지 않는다 ★
 </pre>
 </ul>
+<ul id="wordListList">
+  <li class="title-li"><span>텍스트 색 관리</span></li>
+  <li class="add-li">
+    <input type="text" id="wordInput" placeholder="단어 (쉼표로 구분)" />
+    <select id="colorSelect">
+      <option value="red">빨강</option>
+      <option value="#FFC700">노랑</option>
+      <option value="#6495ED">파랑</option>
+    </select>
+    <button id="addWordBtn" class="add-btn">등록</button>
+  </li>
+</ul>
   
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
@@ -140,6 +165,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const lettersCol = collection(db, "letters");
 const lettersList = document.getElementById("lettersList");
+const wordListCol = collection(db, "wordList");
 
 // 글자 등록
 document.getElementById("addBtn").addEventListener("click", async () => {
@@ -219,8 +245,93 @@ async function loadLetters() {
   });
 }
 
+document.getElementById("addWordBtn").addEventListener("click", async () => {
+  const words = document.getElementById("wordInput").value.split(",");
+  const color = document.getElementById("colorSelect").value;
+  if (!words.length) return alert("단어를 입력하세요.");
+  await addDoc(wordListCol, { words, color, timestamp: Date.now() });
+  document.getElementById("wordInput").value = "";
+  loadWordList();
+});
+
+async function loadWordList() {
+  const wordListList = document.getElementById("wordListList");
+  wordListList.querySelectorAll("li:not(:first-child):not(.add-li)").forEach(li => li.remove());
+
+  const q = query(wordListCol, orderBy("timestamp", "asc"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(docSnap => {
+    const li = document.createElement("li");
+    const data = docSnap.data();
+
+    const span = document.createElement("span");
+    span.textContent = `${data.words.join(", ")} (${data.color})`;
+    span.style.color = data.color;  // ← 여기서 글자 색 적용
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "edit-input";
+    input.value = data.words.join(", ");
+
+    const select = document.createElement("select");
+    select.className = "edit-input";
+    select.innerHTML = `
+      <option value="red">빨강</option>
+      <option value="#FFC700">노랑</option>
+      <option value="#6495ED">파랑</option>
+    `;
+    select.value = data.color;
+
+    const btnRow = document.createElement("div");
+    btnRow.className = "btn-row";
+
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "수정";
+    editBtn.className = "edit-btn";
+    editBtn.addEventListener("click", async () => {
+      const isEditing = input.style.display === "block";
+      if (!isEditing) {
+        span.style.display = "none";
+        input.style.display = "block";
+        select.style.display = "block";
+        editBtn.textContent = "저장";
+      } else {
+        const newWords = input.value.split(",");
+        const newColor = select.value;
+        await updateDoc(doc(db, "wordList", docSnap.id), { words: newWords, color: newColor });
+        span.textContent = `${newWords.join(", ")} (${newColor})`;
+        input.style.display = "none";
+        select.style.display = "none";
+        span.style.display = "block";
+        editBtn.textContent = "수정";
+      }
+    });
+
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "삭제";
+    delBtn.className = "delete-btn";
+    delBtn.addEventListener("click", async () => {
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      await deleteDoc(doc(db, "wordList", docSnap.id));
+      loadWordList();
+    });
+
+    btnRow.appendChild(editBtn);
+    btnRow.appendChild(delBtn);
+
+    li.appendChild(span);
+    li.appendChild(input);
+    li.appendChild(select);
+    li.appendChild(btnRow);
+
+    const addLi = wordListList.querySelector(".add-li");
+    wordListList.insertBefore(li, addLi);
+  });
+}
+  
 // 초기 로드
 loadLetters();
+loadWordList();
 </script>
 
 </body>
