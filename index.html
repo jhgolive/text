@@ -246,11 +246,18 @@ async function loadLetters() {
 }
 
 document.getElementById("addWordBtn").addEventListener("click", async () => {
-  const words = document.getElementById("wordInput").value.split(",");
+  const wordInput = document.getElementById("wordInput");
+  const words = wordInput.value.split(",").map(w => w.trim()).filter(w => w); // 공백 제거
   const color = document.getElementById("colorSelect").value;
-  if (!words.length) return alert("단어를 입력하세요.");
+
+  if (!words.length) {
+    alert("단어를 입력하세요.");
+    wordInput.focus();
+    return;
+  }
+
   await addDoc(wordListCol, { words, color, timestamp: Date.now() });
-  document.getElementById("wordInput").value = "";
+  wordInput.value = "";
   loadWordList();
 });
 
@@ -336,4 +343,5 @@ loadWordList();
 
 </body>
 </html>
+
 
