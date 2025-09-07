@@ -306,7 +306,8 @@ async function loadWordList() {
         const newWords = input.value.split(",");
         const newColor = select.value;
         await updateDoc(doc(db, "wordList", docSnap.id), { words: newWords, color: newColor });
-        span.textContent = `${newWords.join(", ")} (${newColor})`;
+        //span.textContent = `${newWords.join(", ")} (${newColor})`;
+        span.innerText = `${newWords.join(", ")} (${newColor})`;
         input.style.display = "none";
         select.style.display = "none";
         span.style.display = "block";
@@ -343,3 +344,4 @@ loadWordList();
 
 </body>
 </html>
+
