@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -143,6 +143,7 @@ li.add-li {
       <option value="red">빨강</option>
       <option value="#FFC700">노랑</option>
       <option value="#6495ED">파랑</option>
+      <option value="inherit">기본색</option>
     </select>
     <button id="addWordBtn" class="add-btn">등록</button>
   </li>
@@ -286,6 +287,7 @@ async function loadWordList() {
       <option value="red">빨강</option>
       <option value="#FFC700">노랑</option>
       <option value="#6495ED">파랑</option>
+      <option value="inherit">기본색</option>
     `;
     select.value = data.color;
 
@@ -345,5 +347,3 @@ loadWordList();
 
 </body>
 </html>
-
-
